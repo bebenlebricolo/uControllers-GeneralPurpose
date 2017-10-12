@@ -127,6 +127,9 @@ volatile uint8_t ext_Period_Ticks = 0;
 volatile uint8_t ext_out_state = 0;
 volatile uint16_t ext_Prescaler = 0;
 
+// uint32_t debug_Total_On_Ticks =0;
+// uint32_t debug_Total_Period_Ticks =0;
+
 // Available prescalers are :1 ,8 ,32 ,64 ,128 ,256 , 1024
 uint16_t compute_prescaler(void)
 {
@@ -191,8 +194,9 @@ void computeExtTimerVar(float &tOn, uint8_t duty_cycle, const float timer_period
   uint8_t period_Ticks = total_period_ticks % TIMER_RESOLUTION;
   uint8_t on_Ticks = total_nbOnTicks % TIMER_RESOLUTION;
 
-  debug_Total_On_Ticks = total_nbOnTicks;
-  debug_Total_Period_Ticks = total_period_ticks;
+// Debug variables (need to be declared first as uint32_t debug_Total_On_Ticks =0; and uint32_t debug_Total_Period_Ticks =0;)
+//  debug_Total_On_Ticks = total_nbOnTicks;   		
+//  debug_Total_Period_Ticks = total_period_ticks;		
 
   // If computation error : on Ticks > Period Ticks -> then floor on_Ticks to Period Ticks
   if(nbResetsPeriod == nbResetsOn && on_Ticks > period_Ticks) on_Ticks = period_Ticks;
