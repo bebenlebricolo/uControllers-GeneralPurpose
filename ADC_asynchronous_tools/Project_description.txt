@@ -1,0 +1,42 @@
+Here are the files i used to setup (both on arduino and Atmel Studio) an asynchronous ADC.
+It relies on the peripheral ADC of the µcontrollers and instead of having to wait for a conversion to complete, we rely on buffers which hold
+conversion requests. Those requests are sent by a fake classe named "Sensor" and all the necessary attributes to make this schematic work.
+The Adc class receives the conversion requests and stores them in a list whom the size is defined by a #define statement.
+The Adc will init conversion as soon as the first request is passed, and each time a conversion is ready, an Interrupt Service Routine (aka ISR)
+is triggered and handled by the CPU.
+If the pending requests list is full, all future requests will be discarded until the number of requests decreases below a given latch value.
+Also, each one of the sensors is configured to have its own request count limitation (it cannot send more than X requests). It automatically 
+discards all new incoming requests itself. 
+By default, i've put this limit to 3 (arbitrary value). Note that by modifying this parameter individually, you can directly influence
+the priority between sensors (some sensors may require more attention, and then more frequent requests, than others).
+
+Once a conversion is ready, the result is pushed back to its owner (the Sensor which has sent the request) thanks to its adress stored in the
+request list.
+
+e.g:
+
+Adress(Sensor mysensor1) = 0x8fea
+Adress(Sensor mysensor2) = 0x8feb
+
+The pending request list will look like this:
+0 0x8fea (-> adress of mysensor1)
+1 0x8fea (-> again, adress of mysensor1)
+2 0xfeb  (-> adress of mysensor2)
+3 0x000  (-> NULL pointer)
+4 0x000  (-> NULL pointer)
+
+Adc.total_pending_count = 3
+
+Once the conversion completes, the Adc remembers (thanks to an iterator) which sensor sent the request. Then it is pretty easy for the Adc to
+push back data inside the right Sensor.
+
+e.g.
+-> 0 0x8fea (-> adress of mysensor1)        // Pointed by the processing iterator (which allows the adc to recall where it is processing data)
+   1 0x8fea (-> again, adress of mysensor1)
+   2 0xfeb  (-> adress of mysensor2)
+   
+   Then it pushes the data back to mysensor1 thanks to this adress.
+   
+   
+   Hope you'll find it usefull.
+   I'll post the arduino version (.ino) and the Atmel Studio version (main.cpp)
